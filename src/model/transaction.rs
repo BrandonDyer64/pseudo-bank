@@ -1,14 +1,15 @@
 use rust_decimal::Decimal;
 use serde::Deserialize;
 
-use crate::client_id::ClientId;
+use super::id::{client_id::ClientId, transaction_id::TransactionId};
 
 #[derive(Debug, Deserialize)]
 pub struct Transaction {
     #[serde(rename(deserialize = "type"))]
     pub transaction_type: TransactionType,
     pub client: ClientId,
-    pub tx: u32,
+    #[serde(rename(deserialize = "tx"))]
+    pub id: TransactionId,
     pub amount: Option<Decimal>,
 }
 

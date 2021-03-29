@@ -1,7 +1,6 @@
+use crate::model::id::client_id::ClientId;
 use rust_decimal::Decimal;
 use serde::{ser::SerializeStruct, Serialize, Serializer};
-
-use crate::client_id::ClientId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Account {

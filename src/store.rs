@@ -1,20 +1,22 @@
 use std::collections::HashMap;
 
-use crate::{
+use crate::model::{
     account::Account,
-    client_id::ClientId,
+    id::{client_id::ClientId, transaction_id::TransactionId},
     transaction::{Transaction, TransactionType},
 };
 
 #[derive(Debug)]
 pub struct Store {
     accounts: HashMap<ClientId, Account>,
+    applied_transations: HashMap<TransactionId, Transaction>,
 }
 
 impl Store {
     pub fn new() -> Store {
         Store {
             accounts: HashMap::new(),
+            applied_transations: HashMap::new(),
         }
     }
 
