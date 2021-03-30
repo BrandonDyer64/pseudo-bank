@@ -30,6 +30,16 @@ impl Account {
             self.available = new_amount;
         }
     }
+
+    pub fn dispute(&mut self, amount: Decimal) {
+        self.available -= amount;
+        self.held += amount;
+    }
+
+    pub fn resolve(&mut self, amount: Decimal) {
+        self.available += amount;
+        self.held -= amount;
+    }
 }
 
 impl Serialize for Account {

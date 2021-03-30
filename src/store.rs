@@ -9,18 +9,19 @@ use crate::model::{
 #[derive(Debug)]
 pub struct Store {
     accounts: HashMap<ClientId, Account>,
-    applied_transations: HashMap<TransactionId, Transaction>,
+    transactions: HashMap<TransactionId, Transaction>,
 }
 
 impl Store {
     pub fn new() -> Store {
         Store {
             accounts: HashMap::new(),
-            applied_transations: HashMap::new(),
+            transactions: HashMap::new(),
         }
     }
 
     pub fn apply_transaction(&mut self, transaction: Transaction) {
+        let existing_transaction = self.get_transaction(transaction.tx).map(|t| t.clone());
         let account = self
             .accounts
             .entry(transaction.client)
@@ -29,9 +30,23 @@ impl Store {
         match transaction.transaction_type {
             TransactionType::Deposit => {
                 account.deposit(transaction.amount.unwrap_or(0.into()));
+                self.transactions.insert(transaction.tx, transaction);
             }
             TransactionType::Withdraw => {
                 account.withdraw(transaction.amount.unwrap_or(0.into()));
+                self.transactions.insert(transaction.tx, transaction);
+            }
+            TransactionType::Dispute => {
+                let amount = existing_transaction.and_then(|transaction| transaction.amount);
+                if let Some(amount) = amount {
+                    account.dispute(amount);
+                }
+            }
+            TransactionType::Resolve => {
+                let amount = existing_transaction.and_then(|transaction| transaction.amount);
+                if let Some(amount) = amount {
+                    account.resolve(amount);
+                }
             }
             _ => unimplemented!(),
         }
@@ -43,5 +58,9 @@ impl Store {
 
     pub fn get_accounts(&self) -> &HashMap<ClientId, Account> {
         &self.accounts
+    }
+
+    pub fn get_transaction(&self, transaction: TransactionId) -> Option<&Transaction> {
+        self.transactions.get(&transaction)
     }
 }
