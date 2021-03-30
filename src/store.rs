@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::model::{
     account::Account,
     id::{client_id::ClientId, transaction_id::TransactionId},
-    transaction::{Transaction, TransactionType},
+    transaction::Transaction,
 };
 
 #[derive(Debug)]
@@ -21,24 +21,24 @@ impl Store {
     }
 
     pub fn apply_transaction(&mut self, transaction: Transaction) {
-        let existing_transaction = self.transactions.get(&transaction.tx);
         let account = self
             .accounts
             .entry(transaction.client)
             .or_insert_with(|| Account::new(transaction.client));
 
-        account.apply_transaction(&transaction, existing_transaction);
+        let transaction = account.apply_transaction(&self.transactions, transaction);
 
-        match transaction.transaction_type {
-            TransactionType::Deposit | TransactionType::Withdraw => {
-                self.transactions
-                    .insert(transaction.tx, transaction.clone());
-            }
-            _ => (),
+        if let Some(transaction) = transaction {
+            self.transactions
+                .insert(transaction.tx, transaction.clone());
         }
     }
 
     pub fn get_accounts(&self) -> &HashMap<ClientId, Account> {
         &self.accounts
+    }
+
+    pub fn get_transactions(&self) -> &HashMap<TransactionId, Transaction> {
+        &self.transactions
     }
 }
