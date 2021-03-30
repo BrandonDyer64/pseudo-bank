@@ -4,6 +4,7 @@ use rust_decimal::Decimal;
 use serde::{ser::SerializeStruct, Serialize, Serializer};
 
 use super::{
+    error::transaction_error::TransactionError,
     id::{client_id::ClientId, transaction_id::TransactionId},
     transaction::{Transaction, TransactionType},
 };
@@ -40,22 +41,28 @@ impl Account {
         &mut self,
         transaction_store: &HashMap<TransactionId, Transaction>,
         transaction: Transaction,
-    ) -> Option<Transaction> {
+    ) -> Result<Option<Transaction>, TransactionError> {
         if self.is_locked {
-            return None;
+            return Err(TransactionError::AccountLocked(self.id));
         }
         match transaction.transaction_type {
             TransactionType::Deposit => {
                 self.balance += transaction.amount.unwrap_or(0.into());
-                Some(transaction)
+                Ok(Some(transaction))
             }
             TransactionType::Withdraw => {
                 let amount = transaction.amount.unwrap_or(0.into());
-                let new_balance = self.balance - amount;
-                if new_balance > 0.into() {
-                    self.balance = new_balance;
+                let available = self.get_available();
+                if available - amount >= 0.into() {
+                    self.balance -= amount;
+                } else {
+                    return Err(TransactionError::Overdraft {
+                        client: self.id,
+                        available,
+                        transaction_amount: amount,
+                    });
                 }
-                Some(transaction)
+                Ok(Some(transaction))
             }
             TransactionType::Dispute => {
                 if let Some(disputed_transaction) = transaction_store.get(&transaction.tx) {
@@ -63,7 +70,7 @@ impl Account {
                         self.disputes.push(disputed_transaction.clone());
                     }
                 }
-                None
+                Ok(None)
             }
             TransactionType::Resolve => {
                 self.disputes = self
@@ -71,7 +78,7 @@ impl Account {
                     .drain(..)
                     .filter(|t| t.tx != transaction.tx)
                     .collect::<Vec<_>>();
-                None
+                Ok(None)
             }
             TransactionType::Chargeback => {
                 if let Some(disputed_transaction_amount) = self
@@ -87,8 +94,13 @@ impl Account {
                         .filter(|t| t.tx != transaction.tx)
                         .collect::<Vec<_>>();
                     self.balance -= disputed_transaction_amount;
+                } else {
+                    return Err(TransactionError::TransactionNotDisputed(
+                        transaction.tx,
+                        self.id,
+                    ));
                 }
-                None
+                Ok(None)
             }
         }
     }

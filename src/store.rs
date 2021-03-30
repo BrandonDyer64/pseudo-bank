@@ -26,11 +26,18 @@ impl Store {
             .entry(transaction.client)
             .or_insert_with(|| Account::new(transaction.client));
 
-        let transaction = account.apply_transaction(&self.transactions, transaction);
+        let transaction_result = account.apply_transaction(&self.transactions, transaction);
 
-        if let Some(transaction) = transaction {
-            self.transactions
-                .insert(transaction.tx, transaction.clone());
+        match transaction_result {
+            Ok(transaction) => {
+                if let Some(transaction) = transaction {
+                    self.transactions
+                        .insert(transaction.tx, transaction.clone());
+                }
+            }
+            Err(err) => {
+                eprintln!("{}", err);
+            }
         }
     }
 
