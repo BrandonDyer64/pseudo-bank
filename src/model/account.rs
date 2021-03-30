@@ -2,6 +2,8 @@ use crate::model::id::client_id::ClientId;
 use rust_decimal::Decimal;
 use serde::{ser::SerializeStruct, Serialize, Serializer};
 
+use super::transaction::{Transaction, TransactionType};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Account {
     id: ClientId,
@@ -20,34 +22,47 @@ impl Account {
         }
     }
 
-    pub fn deposit(&mut self, amount: Decimal) {
-        self.available += amount;
-    }
-
-    pub fn withdraw(&mut self, amount: Decimal) {
-        let new_amount = self.available - amount;
-        if new_amount > 0.into() {
-            self.available = new_amount;
+    pub fn apply_transaction(
+        &mut self,
+        transaction: &Transaction,
+        existing_transaction: Option<&Transaction>,
+    ) {
+        if self.is_locked {
+            return;
         }
-    }
-
-    pub fn dispute(&mut self, amount: Decimal) {
-        self.available -= amount;
-        self.held += amount;
-    }
-
-    pub fn resolve(&mut self, amount: Decimal) {
-        self.available += amount;
-        self.held -= amount;
-    }
-
-    pub fn chargeback(&mut self, amount: Decimal) {
-        self.held -= amount;
-        self.is_locked = true;
-    }
-
-    pub fn is_locked(&self) -> bool {
-        self.is_locked
+        match transaction.transaction_type {
+            TransactionType::Deposit => {
+                self.available += transaction.amount.unwrap_or(0.into());
+            }
+            TransactionType::Withdraw => {
+                let amount = transaction.amount.unwrap_or(0.into());
+                let new_balance = self.available - amount;
+                if new_balance > 0.into() {
+                    self.available = new_balance;
+                }
+            }
+            TransactionType::Dispute => {
+                let amount = existing_transaction.and_then(|transaction| transaction.amount);
+                if let Some(amount) = amount {
+                    self.available -= amount;
+                    self.held += amount;
+                }
+            }
+            TransactionType::Resolve => {
+                let amount = existing_transaction.and_then(|transaction| transaction.amount);
+                if let Some(amount) = amount {
+                    self.available += amount;
+                    self.held -= amount;
+                }
+            }
+            TransactionType::Chargeback => {
+                let amount = existing_transaction.and_then(|transaction| transaction.amount);
+                if let Some(amount) = amount {
+                    self.held -= amount;
+                    self.is_locked = true;
+                }
+            }
+        }
     }
 }
 

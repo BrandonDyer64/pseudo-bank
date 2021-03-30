@@ -21,54 +21,24 @@ impl Store {
     }
 
     pub fn apply_transaction(&mut self, transaction: Transaction) {
-        let existing_transaction = self.get_transaction(transaction.tx).map(|t| t.clone());
+        let existing_transaction = self.transactions.get(&transaction.tx);
         let account = self
             .accounts
             .entry(transaction.client)
             .or_insert_with(|| Account::new(transaction.client));
-        if account.is_locked() {
-            return;
-        }
+
+        account.apply_transaction(&transaction, existing_transaction);
 
         match transaction.transaction_type {
-            TransactionType::Deposit => {
-                account.deposit(transaction.amount.unwrap_or(0.into()));
-                self.transactions.insert(transaction.tx, transaction);
+            TransactionType::Deposit | TransactionType::Withdraw => {
+                self.transactions
+                    .insert(transaction.tx, transaction.clone());
             }
-            TransactionType::Withdraw => {
-                account.withdraw(transaction.amount.unwrap_or(0.into()));
-                self.transactions.insert(transaction.tx, transaction);
-            }
-            TransactionType::Dispute => {
-                let amount = existing_transaction.and_then(|transaction| transaction.amount);
-                if let Some(amount) = amount {
-                    account.dispute(amount);
-                }
-            }
-            TransactionType::Resolve => {
-                let amount = existing_transaction.and_then(|transaction| transaction.amount);
-                if let Some(amount) = amount {
-                    account.resolve(amount);
-                }
-            }
-            TransactionType::Chargeback => {
-                let amount = existing_transaction.and_then(|transaction| transaction.amount);
-                if let Some(amount) = amount {
-                    account.chargeback(amount);
-                }
-            }
+            _ => (),
         }
-    }
-
-    pub fn get_account(&self, client: ClientId) -> Option<&Account> {
-        self.accounts.get(&client)
     }
 
     pub fn get_accounts(&self) -> &HashMap<ClientId, Account> {
         &self.accounts
-    }
-
-    pub fn get_transaction(&self, transaction: TransactionId) -> Option<&Transaction> {
-        self.transactions.get(&transaction)
     }
 }
