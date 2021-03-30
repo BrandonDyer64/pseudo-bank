@@ -26,6 +26,9 @@ impl Store {
             .accounts
             .entry(transaction.client)
             .or_insert_with(|| Account::new(transaction.client));
+        if account.is_locked() {
+            return;
+        }
 
         match transaction.transaction_type {
             TransactionType::Deposit => {
@@ -48,7 +51,12 @@ impl Store {
                     account.resolve(amount);
                 }
             }
-            _ => unimplemented!(),
+            TransactionType::Chargeback => {
+                let amount = existing_transaction.and_then(|transaction| transaction.amount);
+                if let Some(amount) = amount {
+                    account.chargeback(amount);
+                }
+            }
         }
     }
 

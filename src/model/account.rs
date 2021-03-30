@@ -40,6 +40,15 @@ impl Account {
         self.available += amount;
         self.held -= amount;
     }
+
+    pub fn chargeback(&mut self, amount: Decimal) {
+        self.held -= amount;
+        self.is_locked = true;
+    }
+
+    pub fn is_locked(&self) -> bool {
+        self.is_locked
+    }
 }
 
 impl Serialize for Account {
