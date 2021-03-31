@@ -9,7 +9,7 @@ use crate::model::{
 #[derive(Debug)]
 pub struct Store {
     accounts: HashMap<ClientId, Account>,
-    transactions: HashMap<TransactionId, Transaction>,
+    transactions: HashMap<(ClientId, TransactionId), Transaction>,
 }
 
 impl Store {
@@ -26,18 +26,17 @@ impl Store {
             .entry(transaction.client)
             .or_insert_with(|| Account::new(transaction.client));
 
-        let transaction_result = account.apply_transaction(&self.transactions, transaction);
+        let transaction_result = account.apply_transaction(&self.transactions, &transaction);
 
         match transaction_result {
-            Ok(transaction) => {
-                if let Some(transaction) = transaction {
-                    self.transactions
-                        .insert(transaction.tx, transaction.clone());
-                }
+            Ok(true) => {
+                self.transactions
+                    .insert((transaction.client, transaction.tx), transaction);
             }
             Err(err) => {
-                eprintln!("{}", err);
+                eprintln!("\nError: {}\n{:?}", err, transaction);
             }
+            _ => {}
         }
     }
 
@@ -45,7 +44,7 @@ impl Store {
         &self.accounts
     }
 
-    pub fn get_transactions(&self) -> &HashMap<TransactionId, Transaction> {
+    pub fn get_transactions(&self) -> &HashMap<(ClientId, TransactionId), Transaction> {
         &self.transactions
     }
 }

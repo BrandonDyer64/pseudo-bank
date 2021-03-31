@@ -81,16 +81,16 @@ impl Account {
     /// ```
     pub fn apply_transaction(
         &mut self,
-        transaction_store: &HashMap<TransactionId, Transaction>,
-        transaction: Transaction,
-    ) -> Result<Option<Transaction>, TransactionError> {
+        transaction_store: &HashMap<(ClientId, TransactionId), Transaction>,
+        transaction: &Transaction,
+    ) -> Result<bool, TransactionError> {
         if self.is_locked {
-            return Err(TransactionError::AccountLocked(self.id));
+            return Err(TransactionError::AccountLocked);
         }
         match transaction.transaction_type {
             TransactionType::Deposit => {
                 self.balance += transaction.amount.unwrap_or(0.into());
-                Ok(Some(transaction))
+                Ok(true)
             }
             TransactionType::Withdraw => {
                 let amount = transaction.amount.unwrap_or(0.into());
@@ -99,20 +99,21 @@ impl Account {
                     self.balance -= amount;
                 } else {
                     return Err(TransactionError::Overdraft {
-                        client: self.id,
                         available,
                         transaction_amount: amount,
                     });
                 }
-                Ok(Some(transaction))
+                Ok(true)
             }
             TransactionType::Dispute => {
-                if let Some(disputed_transaction) = transaction_store.get(&transaction.tx) {
+                if let Some(disputed_transaction) =
+                    transaction_store.get(&(self.id, transaction.tx))
+                {
                     if !self.disputes.iter().any(|t| t.tx == transaction.tx) {
                         self.disputes.push(disputed_transaction.clone());
                     }
                 }
-                Ok(None)
+                Ok(false)
             }
             TransactionType::Resolve => {
                 self.disputes = self
@@ -120,7 +121,7 @@ impl Account {
                     .drain(..)
                     .filter(|t| t.tx != transaction.tx)
                     .collect::<Vec<_>>();
-                Ok(None)
+                Ok(false)
             }
             TransactionType::Chargeback => {
                 if let Some(disputed_transaction_amount) = self
@@ -137,12 +138,9 @@ impl Account {
                         .collect::<Vec<_>>();
                     self.balance -= disputed_transaction_amount;
                 } else {
-                    return Err(TransactionError::TransactionNotDisputed(
-                        transaction.tx,
-                        self.id,
-                    ));
+                    return Err(TransactionError::TransactionNotDisputed);
                 }
-                Ok(None)
+                Ok(false)
             }
         }
     }
