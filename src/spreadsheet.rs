@@ -7,7 +7,12 @@ pub fn read_spreadsheet<T: std::io::Read>(store: &mut Store, reader: &mut csv::R
     reader
         .deserialize()
         .filter_map(|transaction| transaction.ok())
-        .for_each(|transaction| store.apply_transaction(transaction));
+        .map(|transaction| store.apply_transaction(transaction))
+        .for_each(|result| {
+            if let Err(err) = result {
+                eprintln!("\nError: {}\n{:?}", err.1, err.0);
+            }
+        });
 }
 
 /// Given a store, will write the current account information to a spreadsheet writer
@@ -25,12 +30,16 @@ mod tests {
     #[test]
     fn basic_spreadsheet() {
         let data = "\
-type,     client, tx, amount
-deposit,  1,      1,  1.0
-deposit,  2,      2,  2.0
-deposit,  1,      3,  2.0
-withdraw, 1,      4,  1.5
-withdraw, 2,      5,  3.0
+type,       client, tx, amount
+deposit,    1,      1,  1.0
+deposit,    2,      2,  2.0
+deposit,    1,      3,  2.0
+withdraw,   1,      4,  1.5
+withdraw,   2,      5,  3.0
+dispute,    1,      1,
+resolve,    1,      1,
+dispute,    1,      1,
+chargeback, 1,      1,
 ";
         let mut store = Store::new();
         let mut reader = ReaderBuilder::new()

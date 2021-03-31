@@ -58,10 +58,21 @@ impl Account {
             .fold(0.into(), |acc, t| acc + t.amount.unwrap_or(0.into()))
     }
 
+    /// Whether or not new transactions can be applied to this account
+    pub fn is_locked(&self) -> bool {
+        self.is_locked
+    }
+
+    pub fn get_id(&self) -> ClientId {
+        self.id
+    }
+
     /// Alters the current balances using a given transaction.
     ///
     /// This is where the bulk of the processing in the application is done.
     /// A clients account can be credited, depited, disputed, and locked through this method.
+    ///
+    /// Returns whether or not the transaction should be stored to the transaction list.
     ///
     /// ```
     /// # let client_id = ClientId(0);
@@ -162,5 +173,140 @@ impl Serialize for Account {
         state.serialize_field("total", &self.balance.round_dp(4))?;
         state.serialize_field("locked", &self.is_locked)?;
         state.end()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use rust_decimal::Decimal;
+
+    use crate::model::{
+        id::{client_id::ClientId, transaction_id::TransactionId},
+        transaction::Transaction,
+        transaction_type::TransactionType,
+    };
+
+    use super::Account;
+
+    fn setup() -> (Account, HashMap<(ClientId, TransactionId), Transaction>) {
+        (Account::new(ClientId(1)), HashMap::new())
+    }
+
+    #[test]
+    fn test_deposit_withdraw() {
+        let (mut account, transaction_store) = setup();
+
+        let deposit = Transaction {
+            transaction_type: TransactionType::Deposit,
+            client: account.get_id(),
+            tx: TransactionId(1),
+            amount: Some(10.into()),
+        };
+        let result = account.apply_transaction(&transaction_store, &deposit);
+        assert!(result.is_ok());
+        assert_eq!(account.get_available(), Decimal::from(10));
+
+        let withdraw = Transaction {
+            transaction_type: TransactionType::Withdraw,
+            client: account.get_id(),
+            tx: TransactionId(2),
+            amount: Some(5.into()),
+        };
+        let result = account.apply_transaction(&transaction_store, &withdraw);
+        assert!(result.is_ok());
+        assert_eq!(account.get_available(), Decimal::from(5));
+    }
+
+    #[test]
+    fn test_dispute_resolve() {
+        let (mut account, mut transaction_store) = setup();
+
+        let deposit = Transaction {
+            transaction_type: TransactionType::Deposit,
+            client: account.get_id(),
+            tx: TransactionId(1),
+            amount: Some(10.into()),
+        };
+        let result = account.apply_transaction(&transaction_store, &deposit);
+        assert!(result.is_ok());
+        assert_eq!(account.get_available(), Decimal::from(10));
+
+        transaction_store.insert((account.get_id(), deposit.tx), deposit);
+
+        let dispute = Transaction {
+            transaction_type: TransactionType::Dispute,
+            client: account.get_id(),
+            tx: TransactionId(1),
+            amount: None,
+        };
+        let result = account.apply_transaction(&transaction_store, &dispute);
+        assert!(result.is_ok());
+        assert_eq!(account.get_available(), Decimal::from(0));
+        assert_eq!(account.get_held(), Decimal::from(10));
+
+        let resolve = Transaction {
+            transaction_type: TransactionType::Resolve,
+            client: account.get_id(),
+            tx: TransactionId(1),
+            amount: None,
+        };
+        let result = account.apply_transaction(&transaction_store, &resolve);
+        assert!(result.is_ok());
+        assert_eq!(account.get_available(), Decimal::from(10));
+        assert_eq!(account.get_held(), Decimal::from(0));
+    }
+
+    #[test]
+    fn test_dispute_chargeback() {
+        let (mut account, mut transaction_store) = setup();
+
+        let deposit = Transaction {
+            transaction_type: TransactionType::Deposit,
+            client: account.get_id(),
+            tx: TransactionId(1),
+            amount: Some(10.into()),
+        };
+        let result = account.apply_transaction(&transaction_store, &deposit);
+        assert!(result.is_ok());
+        assert_eq!(account.get_available(), Decimal::from(10));
+
+        transaction_store.insert((account.get_id(), deposit.tx), deposit);
+
+        let dispute = Transaction {
+            transaction_type: TransactionType::Dispute,
+            client: account.get_id(),
+            tx: TransactionId(1),
+            amount: None,
+        };
+        let result = account.apply_transaction(&transaction_store, &dispute);
+        assert!(result.is_ok());
+        assert_eq!(account.get_available(), Decimal::from(0));
+        assert_eq!(account.get_held(), Decimal::from(10));
+
+        let chargeback = Transaction {
+            transaction_type: TransactionType::Chargeback,
+            client: account.get_id(),
+            tx: TransactionId(1),
+            amount: None,
+        };
+        let result = account.apply_transaction(&transaction_store, &chargeback);
+        assert!(result.is_ok());
+        assert!(account.is_locked());
+        assert_eq!(account.get_available(), Decimal::from(0));
+        assert_eq!(account.get_held(), Decimal::from(0));
+
+        let deposit = Transaction {
+            transaction_type: TransactionType::Resolve,
+            client: account.get_id(),
+            tx: TransactionId(1),
+            amount: None,
+        };
+        let result = account.apply_transaction(&transaction_store, &deposit);
+        assert!(result.is_err());
+        assert!(account.is_locked());
+        assert_eq!(account.get_available(), Decimal::from(0));
+        assert_eq!(account.get_held(), Decimal::from(0));
     }
 }

@@ -13,6 +13,10 @@
 //! ```
 //!
 //! This will process the input file and output the final account balances
+//!
+//! Errors are output to standard error output.
+//! This application should run quickly when there aren't too many transactions that it
+//! needs to print due to error.
 
 use std::env;
 
