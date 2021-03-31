@@ -5,6 +5,8 @@
 //!
 //! The best way to view the documentation for this program is to use `cargo doc`
 //!
+//! An online version of the documentation can be found [here](https://brandondyer64.github.io/pseudo-bank/pseudo_bank/index.html).
+//!
 //! ## Running
 //! ```bash
 //! cargo run input-file.csv
