@@ -1,5 +1,8 @@
+//! A couple of functions for processing spreadsheets
+
 use crate::store::Store;
 
+/// Takes a spreadsheet reader iterator and processes each line accourding to the store
 pub fn read_spreadsheet<T: std::io::Read>(store: &mut Store, reader: &mut csv::Reader<T>) {
     reader
         .deserialize()
@@ -7,6 +10,7 @@ pub fn read_spreadsheet<T: std::io::Read>(store: &mut Store, reader: &mut csv::R
         .for_each(|transaction| store.apply_transaction(transaction));
 }
 
+/// Given a store, will write the current account information to a spreadsheet writer
 pub fn write_spreadsheet<T: std::io::Write>(store: &mut Store, writer: &mut csv::Writer<T>) {
     store.get_accounts().iter().for_each(|account| {
         writer.serialize(account.1).unwrap();

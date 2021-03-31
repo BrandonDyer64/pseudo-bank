@@ -1,3 +1,9 @@
+//! Useful datatypes for storing identifiers
+//!
+//! These provide a little extra type safety when working with ids.
+//! It should aid the programmer when using these ids as they will always know
+//! what type of id it is instead of something ambiguous like `u64`.
+
 pub mod client_id;
 pub mod transaction_id;
 

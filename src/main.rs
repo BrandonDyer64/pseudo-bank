@@ -1,3 +1,17 @@
+//! # PseudoBank
+//! A binary executable to handle a spreadsheet of transactions
+//!
+//! ## Documentation
+//!
+//! The best way to view the documentation for this program is to use `cargo doc`
+//!
+//! ## Running
+//! ```bash
+//! cargo run input-file.csv
+//! ```
+//!
+//! This will process the input file and output the final account balances
+
 use std::env;
 
 use csv::{ReaderBuilder, WriterBuilder};
@@ -8,6 +22,7 @@ pub mod model;
 pub mod spreadsheet;
 pub mod store;
 
+/// Processes a given csv and outputs the final account data to std::io
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mut reader = ReaderBuilder::new()
