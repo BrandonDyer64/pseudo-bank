@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["pseudo_bank"] = [{"text":"impl Freeze for Account","synthetic":true,"types":[]},{"text":"impl Freeze for TransactionError","synthetic":true,"types":[]},{"text":"impl Freeze for ClientId","synthetic":true,"types":[]},{"text":"impl Freeze for TransactionId","synthetic":true,"types":[]},{"text":"impl Freeze for Transaction","synthetic":true,"types":[]},{"text":"impl Freeze for TransactionType","synthetic":true,"types":[]},{"text":"impl Freeze for Store","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

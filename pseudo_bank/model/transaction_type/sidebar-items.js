@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["TransactionType","These values will be parsed from lowercase values"]]});

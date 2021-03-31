@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["read_spreadsheet","Takes a spreadsheet reader iterator and processes each line accourding to the store"],["write_spreadsheet","Given a store, will write the current account information to a spreadsheet writer"]]});

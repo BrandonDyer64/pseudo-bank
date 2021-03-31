@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["main","Processes a given csv and outputs the final account data to std::io"]],"mod":[["model",""],["spreadsheet","A couple of functions for processing spreadsheets"],["store","The \"Bank\""]]});

@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["pseudo_bank"] = [{"text":"impl&lt;'de&gt; Deserialize&lt;'de&gt; for ClientId","synthetic":false,"types":[]},{"text":"impl&lt;'de&gt; Deserialize&lt;'de&gt; for TransactionId","synthetic":false,"types":[]},{"text":"impl&lt;'de&gt; Deserialize&lt;'de&gt; for Transaction","synthetic":false,"types":[]},{"text":"impl&lt;'de&gt; Deserialize&lt;'de&gt; for TransactionType","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

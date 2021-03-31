@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["pseudo_bank"] = [{"text":"impl Clone for ClientId","synthetic":false,"types":[]},{"text":"impl Clone for TransactionId","synthetic":false,"types":[]},{"text":"impl Clone for Transaction","synthetic":false,"types":[]},{"text":"impl Clone for TransactionType","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

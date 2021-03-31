@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["pseudo_bank"] = [{"text":"impl Unpin for Account","synthetic":true,"types":[]},{"text":"impl Unpin for TransactionError","synthetic":true,"types":[]},{"text":"impl Unpin for ClientId","synthetic":true,"types":[]},{"text":"impl Unpin for TransactionId","synthetic":true,"types":[]},{"text":"impl Unpin for Transaction","synthetic":true,"types":[]},{"text":"impl Unpin for TransactionType","synthetic":true,"types":[]},{"text":"impl Unpin for Store","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

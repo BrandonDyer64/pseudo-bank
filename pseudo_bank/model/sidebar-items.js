@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["account","Holds a client's account information, such as current balance"],["error","Error types for use in Results"],["id","Useful datatypes for storing identifiers"],["transaction",""],["transaction_type","Enum for transactions. Deposit, Withdraw, Dispute..."]]});

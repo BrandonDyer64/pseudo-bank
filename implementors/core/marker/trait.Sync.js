@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["pseudo_bank"] = [{"text":"impl Sync for Account","synthetic":true,"types":[]},{"text":"impl Sync for TransactionError","synthetic":true,"types":[]},{"text":"impl Sync for ClientId","synthetic":true,"types":[]},{"text":"impl Sync for TransactionId","synthetic":true,"types":[]},{"text":"impl Sync for Transaction","synthetic":true,"types":[]},{"text":"impl Sync for TransactionType","synthetic":true,"types":[]},{"text":"impl Sync for Store","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
