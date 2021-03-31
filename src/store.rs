@@ -9,18 +9,18 @@ use crate::model::{
     transaction::Transaction,
 };
 
-#[derive(Debug)]
-pub struct Store {
-    accounts: HashMap<ClientId, Account>,
-    transactions: HashMap<(ClientId, TransactionId), Transaction>,
-}
-
 /// The core "bank" of the program
 ///
 /// Stores the map of accounts and transactions.
 /// Handles transactions applied to accounts.
 ///
 /// For more on how transactions are handled, see [Account].
+#[derive(Debug)]
+pub struct Store {
+    accounts: HashMap<ClientId, Account>,
+    transactions: HashMap<(ClientId, TransactionId), Transaction>,
+}
+
 impl Store {
     pub fn new() -> Store {
         Store {
