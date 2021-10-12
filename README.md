@@ -17,8 +17,7 @@ cargo run input-file.csv
 This will process the input file and output the final account balances
 
 Errors are output to standard error output.
-This application should run quickly when there aren't too many transactions that it
-needs to print due to error.
+This application should run fairly quickly when there aren't too many errors in the transactions that it would need to print to console.
 
 #### Example Input
 ```csv,no_run
